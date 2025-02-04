@@ -10,19 +10,19 @@ const useStyles = createStyles(({ css, token, prefixCls }) => ({
   `,
   menu: css`
     flex: 1;
-    background: transparent;
     border: none !important;
+    background: transparent;
 
     .${prefixCls}-menu-item-divider {
       margin-block: 0.125rem;
       border-color: ${token.colorFillTertiary};
 
       &:first-child {
-        margin-top: 0;
+        margin-block-start: 0;
       }
 
       &:last-child {
-        margin-bottom: 0;
+        margin-block-end: 0;
       }
     }
 
@@ -33,7 +33,8 @@ const useStyles = createStyles(({ css, token, prefixCls }) => ({
 
       height: unset;
       min-height: 2rem;
-      padding: 0.375rem 0.75rem;
+      padding-block: 0.375rem;
+      padding-inline: 0.75rem;
 
       line-height: 2;
 

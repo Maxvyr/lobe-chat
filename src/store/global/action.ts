@@ -1,7 +1,7 @@
 import isEqual from 'fast-deep-equal';
 import { produce } from 'immer';
-import { gt } from 'semver';
-import useSWR, { SWRResponse } from 'swr';
+import { gt, parse, valid } from 'semver';
+import { SWRResponse } from 'swr';
 import type { StateCreator } from 'zustand/vanilla';
 
 import { INBOX_SESSION_ID } from '@/const/session';
@@ -24,8 +24,10 @@ export interface GlobalStoreAction {
   switchBackToChat: (sessionId?: string) => void;
   toggleChatSideBar: (visible?: boolean) => void;
   toggleExpandSessionGroup: (id: string, expand: boolean) => void;
+  toggleMobilePortal: (visible?: boolean) => void;
   toggleMobileTopic: (visible?: boolean) => void;
   toggleSystemRole: (visible?: boolean) => void;
+  toggleZenMode: () => void;
   updateSystemStatus: (status: Partial<SystemStatus>, action?: any) => void;
   useCheckLatestVersion: (enabledCheck?: boolean) => SWRResponse<string>;
   useInitSystemStatus: () => SWRResponse;
@@ -40,6 +42,7 @@ export const globalActionSlice: StateCreator<
   switchBackToChat: (sessionId) => {
     get().router?.push(SESSION_CHAT_URL(sessionId || INBOX_SESSION_ID, get().isMobile));
   },
+
   toggleChatSideBar: (newValue) => {
     const showChatSideBar =
       typeof newValue === 'boolean' ? newValue : !get().status.showChatSideBar;
@@ -59,6 +62,12 @@ export const globalActionSlice: StateCreator<
     });
     get().updateSystemStatus({ expandSessionGroupKeys: nextExpandSessionGroup });
   },
+  toggleMobilePortal: (newValue) => {
+    const mobileShowPortal =
+      typeof newValue === 'boolean' ? newValue : !get().status.mobileShowPortal;
+
+    get().updateSystemStatus({ mobileShowPortal }, n('toggleMobilePortal', newValue));
+  },
   toggleMobileTopic: (newValue) => {
     const mobileShowTopic =
       typeof newValue === 'boolean' ? newValue : !get().status.mobileShowTopic;
@@ -69,6 +78,12 @@ export const globalActionSlice: StateCreator<
     const showSystemRole = typeof newValue === 'boolean' ? newValue : !get().status.mobileShowTopic;
 
     get().updateSystemStatus({ showSystemRole }, n('toggleMobileTopic', newValue));
+  },
+  toggleZenMode: () => {
+    const { status } = get();
+    const nextZenMode = !status.zenMode;
+
+    get().updateSystemStatus({ zenMode: nextZenMode }, n('toggleZenMode'));
   },
   updateSystemStatus: (status, action) => {
     // Status cannot be modified when it is not initialized
@@ -83,14 +98,32 @@ export const globalActionSlice: StateCreator<
   },
 
   useCheckLatestVersion: (enabledCheck = true) =>
-    useSWR(enabledCheck ? 'checkLatestVersion' : null, globalService.getLatestVersion, {
-      // check latest version every 30 minutes
-      focusThrottleInterval: 1000 * 60 * 30,
-      onSuccess: (data: string) => {
-        if (gt(data, CURRENT_VERSION))
-          set({ hasNewVersion: true, latestVersion: data }, false, n('checkLatestVersion'));
+    useOnlyFetchOnceSWR(
+      enabledCheck ? 'checkLatestVersion' : null,
+      async () => globalService.getLatestVersion(),
+      {
+        // check latest version every 30 minutes
+        focusThrottleInterval: 1000 * 60 * 30,
+        onSuccess: (data: string) => {
+          if (!valid(CURRENT_VERSION) || !valid(data)) return;
+
+          // Parse versions to ensure we're working with valid SemVer objects
+          const currentVersion = parse(CURRENT_VERSION);
+          const latestVersion = parse(data);
+
+          if (!currentVersion || !latestVersion) return;
+
+          // only compare major and minor versions
+          // solve the problem of frequent patch updates
+          const currentMajorMinor = `${currentVersion.major}.${currentVersion.minor}.0`;
+          const latestMajorMinor = `${latestVersion.major}.${latestVersion.minor}.0`;
+
+          if (gt(latestMajorMinor, currentMajorMinor)) {
+            set({ hasNewVersion: true, latestVersion: data }, false, n('checkLatestVersion'));
+          }
+        },
       },
-    }),
+    ),
 
   useInitSystemStatus: () =>
     useOnlyFetchOnceSWR<SystemStatus>(

@@ -6,8 +6,8 @@ import { rgba } from 'polished';
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useOpenSettings } from '@/hooks/useInterceptingRoutes';
 import { SidebarTabKey } from '@/store/global/initialState';
+import { featureFlagsSelectors, useServerConfigStore } from '@/store/serverConfig';
 
 const useStyles = createStyles(({ css, token }) => ({
   active: css`
@@ -25,35 +25,44 @@ interface Props {
 export default memo<Props>(({ className, tabBarKey }) => {
   const { t } = useTranslation('common');
   const { styles } = useStyles();
-  const openSettings = useOpenSettings();
   const router = useRouter();
+  const openSettings = () => {
+    router.push('/settings/llm');
+  };
+  const { showMarket } = useServerConfigStore(featureFlagsSelectors);
+
   const items: MobileTabBarProps['items'] = useMemo(
-    () => [
-      {
-        icon: (active) => (
-          <Icon className={active ? styles.active : undefined} icon={MessageSquare} />
-        ),
-        key: SidebarTabKey.Chat,
-        onClick: () => {
-          router.push('/chat');
+    () =>
+      [
+        {
+          icon: (active: boolean) => (
+            <Icon className={active ? styles.active : undefined} icon={MessageSquare} />
+          ),
+          key: SidebarTabKey.Chat,
+          onClick: () => {
+            router.push('/chat');
+          },
+          title: t('tab.chat'),
         },
-        title: t('tab.chat'),
-      },
-      {
-        icon: (active) => <Icon className={active ? styles.active : undefined} icon={Bot} />,
-        key: SidebarTabKey.Market,
-        onClick: () => {
-          router.push('/market');
+        showMarket && {
+          icon: (active: boolean) => (
+            <Icon className={active ? styles.active : undefined} icon={Bot} />
+          ),
+          key: SidebarTabKey.Discover,
+          onClick: () => {
+            router.push('/discover');
+          },
+          title: t('tab.discover'),
         },
-        title: t('tab.market'),
-      },
-      {
-        icon: (active) => <Icon className={active ? styles.active : undefined} icon={User} />,
-        key: SidebarTabKey.Setting,
-        onClick: openSettings,
-        title: t('tab.setting'),
-      },
-    ],
+        {
+          icon: (active: boolean) => (
+            <Icon className={active ? styles.active : undefined} icon={User} />
+          ),
+          key: SidebarTabKey.Setting,
+          onClick: openSettings,
+          title: t('tab.setting'),
+        },
+      ].filter(Boolean) as MobileTabBarProps['items'],
     [t],
   );
 

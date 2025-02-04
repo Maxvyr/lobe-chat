@@ -1,15 +1,23 @@
-// import urlJoin from 'url-join';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
-// import { fileEnv } from '@/config/file';
-import { DataImporter } from '@/database/server/modules/DataImporter';
+import { DataImporterRepos } from '@/database/repositories/dataImporter';
+import { serverDB } from '@/database/server';
 import { authedProcedure, router } from '@/libs/trpc';
-import { S3 } from '@/server/files/s3';
+import { S3 } from '@/server/modules/S3';
 import { ImportResults, ImporterEntryData } from '@/types/importer';
 
+const importProcedure = authedProcedure.use(async (opts) => {
+  const { ctx } = opts;
+  const dataImporterService = new DataImporterRepos(serverDB, ctx.userId);
+
+  return opts.next({
+    ctx: { dataImporterService },
+  });
+});
+
 export const importerRouter = router({
-  importByFile: authedProcedure
+  importByFile: importProcedure
     .input(z.object({ pathname: z.string() }))
     .mutation(async ({ input, ctx }): Promise<ImportResults> => {
       let data: ImporterEntryData | undefined;
@@ -29,12 +37,10 @@ export const importerRouter = router({
         });
       }
 
-      const dataImporter = new DataImporter(ctx.userId);
-
-      return dataImporter.importData(data);
+      return ctx.dataImporterService.importData(data);
     }),
 
-  importByPost: authedProcedure
+  importByPost: importProcedure
     .input(
       z.object({
         data: z.object({
@@ -47,8 +53,6 @@ export const importerRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }): Promise<ImportResults> => {
-      const dataImporter = new DataImporter(ctx.userId);
-
-      return dataImporter.importData(input.data);
+      return ctx.dataImporterService.importData(input.data);
     }),
 });

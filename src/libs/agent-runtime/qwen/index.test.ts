@@ -63,7 +63,7 @@ describe('LobeQwenAI', () => {
         try {
           await instance.chat({
             messages: [{ content: 'Hello', role: 'user' }],
-            model: 'qwen-turbo',
+            model: 'qwen-turbo-latest',
             temperature: 0.999,
           });
         } catch (e) {
@@ -103,7 +103,7 @@ describe('LobeQwenAI', () => {
         try {
           await instance.chat({
             messages: [{ content: 'Hello', role: 'user' }],
-            model: 'qwen-turbo',
+            model: 'qwen-turbo-latest',
             temperature: 0.999,
           });
         } catch (e) {
@@ -139,7 +139,7 @@ describe('LobeQwenAI', () => {
         try {
           await instance.chat({
             messages: [{ content: 'Hello', role: 'user' }],
-            model: 'qwen-turbo',
+            model: 'qwen-turbo-latest',
             temperature: 0.999,
           });
         } catch (e) {
@@ -164,7 +164,7 @@ describe('LobeQwenAI', () => {
         try {
           await instance.chat({
             messages: [{ content: 'Hello', role: 'user' }],
-            model: 'qwen-turbo',
+            model: 'qwen-turbo-latest',
             temperature: 0.999,
           });
         } catch (e) {
@@ -187,7 +187,7 @@ describe('LobeQwenAI', () => {
         try {
           await instance.chat({
             messages: [{ content: 'Hello', role: 'user' }],
-            model: 'qwen-turbo',
+            model: 'qwen-turbo-latest',
             temperature: 0.999,
           });
         } catch (e) {
@@ -235,7 +235,7 @@ describe('LobeQwenAI', () => {
         // 假设的测试函数调用，你可能需要根据实际情况调整
         await instance.chat({
           messages: [{ content: 'Hello', role: 'user' }],
-          model: 'qwen-turbo',
+          model: 'qwen-turbo-latest',
           stream: true,
           temperature: 0.999,
         });

@@ -10,8 +10,8 @@ import { useNewVersion } from './useNewVersion';
 
 const useStyles = createStyles(({ css }) => ({
   popover: css`
-    top: 8px !important;
-    left: 8px !important;
+    inset-block-start: 8px !important;
+    inset-inline-start: 8px !important;
   `,
 }));
 
@@ -27,9 +27,11 @@ const UserPanel = memo<PropsWithChildren>(({ children }) => {
         content={<PanelContent closePopover={() => setOpen(false)} />}
         onOpenChange={setOpen}
         open={open}
-        overlayInnerStyle={{ padding: 0 }}
         placement={'topRight'}
         rootClassName={styles.popover}
+        styles={{
+          body: { padding: 0 },
+        }}
         trigger={['click']}
       >
         {children}

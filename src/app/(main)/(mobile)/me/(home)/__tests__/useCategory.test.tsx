@@ -1,9 +1,14 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { ServerConfigStoreProvider } from '@/store/serverConfig';
 import { useUserStore } from '@/store/user';
 
 import { useCategory } from '../features/useCategory';
+
+const wrapper: React.JSXElementConstructor<{ children: React.ReactNode }> = ({ children }) => (
+  <ServerConfigStoreProvider>{children}</ServerConfigStoreProvider>
+);
 
 // Mock dependencies
 vi.mock('next/navigation', () => ({
@@ -40,35 +45,17 @@ afterEach(() => {
   enableClerk = true;
 });
 
+// 目前对 enableAuth 的判定是在 useUserStore 中，所以需要 mock useUserStore
+// 类型定义： enableAuth: () => boolean
 describe('useCategory', () => {
   it('should return correct items when the user is logged in with authentication', () => {
     act(() => {
-      useUserStore.setState({ isSignedIn: true });
+      useUserStore.setState({ isSignedIn: true, enableAuth: () => true });
     });
     enableAuth = true;
     enableClerk = false;
 
-    const { result } = renderHook(() => useCategory());
-
-    act(() => {
-      const items = result.current;
-      expect(items.some((item) => item.key === 'profile')).toBe(false);
-      expect(items.some((item) => item.key === 'setting')).toBe(true);
-      expect(items.some((item) => item.key === 'data')).toBe(true);
-      expect(items.some((item) => item.key === 'docs')).toBe(true);
-      expect(items.some((item) => item.key === 'feedback')).toBe(true);
-      expect(items.some((item) => item.key === 'discord')).toBe(true);
-    });
-  });
-
-  it('should return correct items when the user is logged in with Clerk', () => {
-    act(() => {
-      useUserStore.setState({ isSignedIn: true });
-    });
-    enableAuth = true;
-    enableClerk = true;
-
-    const { result } = renderHook(() => useCategory());
+    const { result } = renderHook(() => useCategory(), { wrapper });
 
     act(() => {
       const items = result.current;
@@ -77,17 +64,16 @@ describe('useCategory', () => {
       expect(items.some((item) => item.key === 'data')).toBe(true);
       expect(items.some((item) => item.key === 'docs')).toBe(true);
       expect(items.some((item) => item.key === 'feedback')).toBe(true);
-      expect(items.some((item) => item.key === 'discord')).toBe(true);
+      expect(items.some((item) => item.key === 'changelog')).toBe(true);
     });
   });
 
   it('should return correct items when the user is not logged in', () => {
     act(() => {
-      useUserStore.setState({ isSignedIn: false });
+      useUserStore.setState({ isSignedIn: false, enableAuth: () => true });
     });
-    enableAuth = true;
 
-    const { result } = renderHook(() => useCategory());
+    const { result } = renderHook(() => useCategory(), { wrapper });
 
     act(() => {
       const items = result.current;
@@ -96,17 +82,17 @@ describe('useCategory', () => {
       expect(items.some((item) => item.key === 'data')).toBe(false);
       expect(items.some((item) => item.key === 'docs')).toBe(true);
       expect(items.some((item) => item.key === 'feedback')).toBe(true);
-      expect(items.some((item) => item.key === 'discord')).toBe(true);
+      expect(items.some((item) => item.key === 'changelog')).toBe(true);
     });
   });
 
   it('should handle settings for non-authenticated users', () => {
     act(() => {
-      useUserStore.setState({ isSignedIn: false });
+      useUserStore.setState({ isSignedIn: false, enableAuth: () => false });
     });
-    enableAuth = false;
+    enableClerk = false;
 
-    const { result } = renderHook(() => useCategory());
+    const { result } = renderHook(() => useCategory(), { wrapper });
 
     act(() => {
       const items = result.current;

@@ -2,9 +2,9 @@ import { Checkbox, Form, FormInstance, Input } from 'antd';
 import { memo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import MaxTokenSlider from '@/components/MaxTokenSlider';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { ChatModelCard } from '@/types/llm';
-
-import MaxTokenSlider from './MaxTokenSlider';
 
 interface ModelConfigFormProps {
   initialValues?: ChatModelCard;
@@ -17,6 +17,8 @@ const ModelConfigForm = memo<ModelConfigFormProps>(
     const { t } = useTranslation('setting');
 
     const [formInstance] = Form.useForm();
+
+    const isMobile = useIsMobile();
 
     useEffect(() => {
       onFormInstanceReady(formInstance);
@@ -37,7 +39,7 @@ const ModelConfigForm = memo<ModelConfigFormProps>(
           initialValues={initialValues}
           labelCol={{ span: 4 }}
           style={{ marginTop: 16 }}
-          wrapperCol={{ offset: 1, span: 18 }}
+          wrapperCol={isMobile ? { span: 18 } : { offset: 1, span: 18 }}
         >
           <Form.Item
             extra={t('llm.customModelCards.modelConfig.id.extra')}
@@ -63,7 +65,10 @@ const ModelConfigForm = memo<ModelConfigFormProps>(
           >
             <Input placeholder={t('llm.customModelCards.modelConfig.displayName.placeholder')} />
           </Form.Item>
-          <Form.Item label={t('llm.customModelCards.modelConfig.tokens.title')} name={'tokens'}>
+          <Form.Item
+            label={t('llm.customModelCards.modelConfig.tokens.title')}
+            name={'contextWindowTokens'}
+          >
             <MaxTokenSlider />
           </Form.Item>
           <Form.Item

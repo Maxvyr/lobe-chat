@@ -4,15 +4,14 @@ import { Form, type ItemGroup, SelectWithImg, SliderWithInput } from '@lobehub/u
 import { Select } from 'antd';
 import isEqual from 'fast-deep-equal';
 import { Monitor, Moon, Sun } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useSyncSettings } from '@/app/(main)/settings/hooks/useSyncSettings';
-import { enableAuth } from '@/const/auth';
 import { FORM_STYLE } from '@/const/layoutTokens';
 import { imageUrl } from '@/const/url';
-import AvatarWithUpload from '@/features/AvatarWithUpload';
-import { localeOptions } from '@/locales/resources';
+import { Locales, localeOptions } from '@/locales/resources';
 import { useUserStore } from '@/store/user';
 import { settingsSelectors, userGeneralSettingsSelectors } from '@/store/user/selectors';
 import { switchLang } from '@/utils/client/switchLang';
@@ -23,6 +22,7 @@ type SettingItemGroup = ItemGroup;
 
 const Theme = memo(() => {
   const { t } = useTranslation('setting');
+  const router = useRouter();
   const [form] = Form.useForm();
   const settings = useUserStore(settingsSelectors.currentSettings, isEqual);
   const themeMode = useUserStore(userGeneralSettingsSelectors.currentThemeMode);
@@ -30,14 +30,13 @@ const Theme = memo(() => {
 
   useSyncSettings(form);
 
+  const handleLangChange = (value: Locales) => {
+    switchLang(value);
+    router.refresh();
+  };
+
   const theme: SettingItemGroup = {
     children: [
-      {
-        children: <AvatarWithUpload />,
-        hidden: enableAuth,
-        label: t('settingTheme.avatar.title'),
-        minWidth: undefined,
-      },
       {
         children: (
           <SelectWithImg
@@ -74,7 +73,7 @@ const Theme = memo(() => {
       {
         children: (
           <Select
-            onChange={switchLang}
+            onChange={handleLangChange}
             options={[{ label: t('settingTheme.lang.autoMode'), value: 'auto' }, ...localeOptions]}
           />
         ),

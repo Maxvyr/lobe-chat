@@ -1,11 +1,15 @@
+import { Suspense } from 'react';
 import { Flexbox } from 'react-layout-kit';
+
+import BrandTextLoading from '@/components/Loading/BrandTextLoading';
 
 import { LayoutProps } from '../type';
 import ChatHeader from './ChatHeader';
 import HotKeys from './HotKeys';
+import Portal from './Portal';
 import TopicPanel from './TopicPanel';
 
-const Layout = ({ children, topic, conversation }: LayoutProps) => {
+const Layout = ({ children, topic, conversation, portal }: LayoutProps) => {
   return (
     <>
       <ChatHeader />
@@ -23,6 +27,9 @@ const Layout = ({ children, topic, conversation }: LayoutProps) => {
           {conversation}
         </Flexbox>
         {children}
+        <Portal>
+          <Suspense fallback={<BrandTextLoading />}>{portal}</Suspense>
+        </Portal>
         <TopicPanel>{topic}</TopicPanel>
       </Flexbox>
       <HotKeys />

@@ -2,21 +2,35 @@
 
 import { MobileNavBar, MobileNavBarTitle } from '@lobehub/ui';
 import { Tag } from 'antd';
-import { useRouter } from 'next/navigation';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Flexbox } from 'react-layout-kit';
 
-import { enableAuth } from '@/const/auth';
-import { useActiveSettingsKey } from '@/hooks/useActiveSettingsKey';
+import { useActiveSettingsKey } from '@/hooks/useActiveTabKey';
+import { useQueryRoute } from '@/hooks/useQueryRoute';
+import { useShowMobileWorkspace } from '@/hooks/useShowMobileWorkspace';
 import { SettingsTabs } from '@/store/global/initialState';
+import { useSessionStore } from '@/store/session';
+import { useUserStore } from '@/store/user';
+import { authSelectors } from '@/store/user/selectors';
 import { mobileHeaderSticky } from '@/styles/mobileHeader';
 
 const Header = memo(() => {
   const { t } = useTranslation('setting');
 
-  const router = useRouter();
+  const router = useQueryRoute();
+  const showMobileWorkspace = useShowMobileWorkspace();
   const activeSettingsKey = useActiveSettingsKey();
+  const isSessionActive = useSessionStore((s) => !!s.activeId);
+  const enableAuth = useUserStore(authSelectors.enabledAuth);
+
+  const handleBackClick = () => {
+    if (isSessionActive && showMobileWorkspace) {
+      router.push('/chat');
+    } else {
+      router.push(enableAuth ? '/me/settings' : '/me');
+    }
+  };
   return (
     <MobileNavBar
       center={
@@ -33,7 +47,7 @@ const Header = memo(() => {
           }
         />
       }
-      onBackClick={() => router.push(enableAuth ? '/me/settings' : '/me')}
+      onBackClick={handleBackClick}
       showBackButton
       style={mobileHeaderSticky}
     />
